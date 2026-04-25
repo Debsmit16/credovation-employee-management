@@ -1,7 +1,7 @@
 {
   "version": 2,
   "installCommand": "npm install --prefix server && cd server && npx prisma generate --schema=src/prisma/schema.prisma && cd .. && npm install --prefix client",
-  "buildCommand": "cd client && npx vite build",
+  "buildCommand": "cd client && npm run build:vercel",
   "outputDirectory": "client/dist",
   "rewrites": [
     { "source": "/api/(.*)", "destination": "/api" }
