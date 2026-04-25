@@ -18,8 +18,20 @@ import exportRoutes from './routes/exports';
 const app = express();
 
 // ─── Global Middleware ──────────────────────────────────────────────
+const allowedOrigins = [
+  process.env.CLIENT_URL,
+  'https://credovation-employee-management-drab.vercel.app',
+  'http://localhost:5173',
+].filter(Boolean) as string[];
+
 app.use(cors({
-  origin: process.env.CLIENT_URL || 'http://localhost:5173',
+  origin: (origin, callback) => {
+    if (!origin || allowedOrigins.some(o => origin.startsWith(o.replace(/\/$/, '')))) {
+      callback(null, true);
+    } else {
+      callback(null, true); // Allow all in production for now
+    }
+  },
   credentials: true,
 }));
 app.use(express.json({ limit: '10mb' }));
