@@ -1,6 +1,16 @@
 {
+  "version": 2,
   "buildCommand": "cd client && npm install && npm run build",
   "outputDirectory": "client/dist",
-  "installCommand": "cd client && npm install",
-  "framework": "vite"
+  "installCommand": "npm install --prefix server && npx prisma generate --schema=server/src/prisma/schema.prisma && npm install --prefix client",
+  "framework": "vite",
+  "rewrites": [
+    { "source": "/api/(.*)", "destination": "/api" }
+  ],
+  "functions": {
+    "api/index.ts": {
+      "memory": 1024,
+      "maxDuration": 30
+    }
+  }
 }
