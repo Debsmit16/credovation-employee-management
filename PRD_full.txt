@@ -1,0 +1,542 @@
+﻿WORKFORCE DAILY TRACKER
+Product Requirements Document (PRD)
+Version 1.0  |  April 2026  |  Confidential
+Prepared for: Antigravity
+Classification: Internal Use Only
+1. Executive Summary
+The Workforce Daily Tracker is a role-based web application designed to digitise and centralise the daily operations of a 20-person organisation. The system replaces manual spreadsheet-based tracking with a real-time, automated platform that covers employee attendance, task management, leave workflows, performance monitoring, and reporting - all accessible through a browser with no installation required.
+This PRD defines every feature, screen, user story, data model, API contract, non-functional requirement, and delivery milestone required to build Version 1.0 of the platform.
+Core Objective
+Enable Employees, Managers, and HR Admins to perform their daily workforce management tasks from a single, secure, role-aware web application integrated with Microsoft 365.
+2. Product Overview
+2.1 Product Vision
+A unified, real-time workforce management portal that eliminates manual tracking, reduces HR overhead, and gives management live visibility into team productivity and attendance.
+2.2 Scope
+Web application (responsive, browser-based - Chrome, Edge, Firefox, Safari)
+Microsoft 365 integration (SSO via Azure AD, OneDrive/SharePoint for exports)
+Three user roles: Employee, Manager, HR Admin
+Up to 20 concurrent users (scalable to 100+ in future versions)
+Initial deployment target: Azure Static Web Apps + Azure Functions backend
+2.3 Out of Scope (V1)
+Native mobile app (iOS/Android)
+Payroll integration
+Biometric attendance hardware integration
+Multi-company / multi-tenant support
+2.4 Stakeholders
+Stakeholder
+Role
+Primary Interest
+Employees (x20)
+End user
+Quick daily check-in, task view, leave requests
+Managers
+Approver / assigner
+Task allocation, leave approvals, team performance
+HR Admin
+System owner
+Full dashboard, reports, employee management
+IT / DevOps
+Operator
+Deployment, security, Azure infra management
+3. User Roles & Permissions
+3.1 Role Definitions
+Feature
+Employee
+Manager
+HR Admin
+Super Admin
+Notes
+Daily check-in/out
+Own only
+Own + view team
+All
+All
+Task submission
+Own only
+Own + assign
+View all
+All
+Task assignment
+None
+To direct reports
+View only
+All
+Leave request
+Submit own
+Submit + approve
+Submit + approve all
+All
+Performance ratings
+Own self-rating
+Rate direct reports
+View all
+All
+HR Dashboard
+None
+Team view only
+Full access
+Full access
+Reports & exports
+Own data
+Team reports
+All reports
+All reports
+Excel + PDF
+Employee management
+None
+None
+Add/edit/deactivate
+Full CRUD
+System configuration
+None
+None
+Limited
+Full
+4. Functional Requirements
+4.1 Authentication & Onboarding
+4.1.1 Microsoft SSO Login
+Login via Azure Active Directory (AAD) using Microsoft OAuth 2.0 / MSAL
+On first login, user profile auto-populated from AAD (name, email, department, manager)
+Role assigned by HR Admin post-registration
+Session timeout after 8 hours of inactivity
+'Remember me' option for 30-day persistent login
+4.1.2 User Profile
+Editable fields: profile photo, phone number, emergency contact, work location
+Read-only fields (sourced from AAD): name, email, department, designation, manager
+Password management handled entirely by Microsoft - no local passwords
+4.2 Employee Daily Check-In / Check-Out
+4.2.1 Check-In Flow
+One-click check-in button on employee home screen
+System records exact timestamp (IST, server-side)
+Status selection: Present / WFH / On-site Client
+Optional morning note (max 200 characters)
+If check-in missed by 10:00 AM IST  automated reminder notification
+Late check-in flag auto-applied if after 09:30 AM IST (configurable threshold)
+4.2.2 Check-Out Flow
+Check-out button unlocks after minimum 4 hours from check-in
+End-of-day summary popup: tasks completed count, self-performance rating (1-5 stars), optional notes
+Auto check-out applied at midnight if employee forgets (marked as incomplete)
+Total hours worked calculated and stored (check-out time minus check-in time)
+4.3 Task Management
+4.3.1 Task Assignment (Manager)
+Manager opens 'Assign Tasks' panel, selects employee and date
+Add tasks with: title (required), description, priority (High / Medium / Low), due time
+Tasks can be assigned to multiple employees simultaneously (broadcast)
+Edit or delete assigned tasks before employee starts them
+View assignment history per employee
+4.3.2 Daily Task Log (Employee)
+Employee views today's assigned tasks in a checklist format
+Mark tasks as: Not Started / In Progress / Completed / Blocked
+Add completion notes per task
+Add self-initiated tasks not assigned by manager (marked 'Self-assigned')
+Tasks carry over to next day if incomplete, with visual overdue indicator
+4.3.3 Task Visibility
+Manager sees real-time status of all team tasks on a Kanban-style board
+HR Admin sees task completion rates across all teams
+Filter by employee, date range, status, priority
+4.4 Leave Management
+4.4.1 Leave Request (Employee)
+Select leave type: Full Day / Half Day / Sick Leave / Emergency Leave
+Select date range (up to 14 consecutive days per request)
+Add reason / supporting notes
+View remaining leave balance by type
+Cancel pending or approved future leave
+4.4.2 Leave Approval Workflow
+On submission, Manager receives in-app notification + email
+Manager approves, rejects, or requests modification with comment
+Employee notified of decision in real-time
+On approval: attendance record auto-updated; leave balance decremented
+HR Admin can override any manager decision
+Leave calendar view shows team availability for conflict detection
+4.4.3 Leave Balances
+HR Admin configures annual leave entitlements per employee
+System tracks: earned, taken, pending, remaining per leave type
+Leave year reset on configurable date (default: April 1st)
+4.5 Notifications & Reminders
+4.5.1 In-App Notifications
+Real-time notification bell icon with unread count badge
+Notification types: check-in reminder, task assigned, task overdue, leave approved/rejected, manager comment, system alert
+Mark as read individually or all at once
+Notification history retained for 90 days
+4.5.2 Email Notifications
+All notifications also sent to user's Microsoft 365 email
+Daily digest email at 8:30 AM IST: today's tasks, leave status, reminders
+Weekly summary email to managers every Monday: team attendance, completion rates
+HR Admin receives weekly workforce summary report via email
+4.5.3 Teams Integration (optional, Phase 1.5)
+Post daily reminders to a designated MS Teams channel
+Leave approval notifications via Teams adaptive cards
+4.6 HR / Manager Dashboard
+4.6.1 HR Admin Dashboard
+KPI cards at top: Total Present Today, WFH, On Leave, Absent, Avg Team Rating
+Attendance heatmap: all employees x last 30 days (colour-coded by status)
+Performance trend chart: team average rating per week (line chart)
+Task completion rate bar chart: per employee, current week
+Leave calendar: who is on leave when (month view)
+Late arrival tracker: employees with 3+ late check-ins in current month
+Top performers widget: ranked by avg rating + task completion %
+4.6.2 Manager Dashboard
+Filtered view of the above, limited to direct reports only
+Today's team status at a glance: attendance + task progress
+Pending leave approvals widget with quick approve/reject buttons
+Overdue tasks alert: team tasks past due time
+4.6.3 Employee Dashboard (My Day)
+Today's check-in status and work hours so far
+My tasks list for today (from manager + self-assigned)
+My leave balance summary
+My performance trend (last 30 days self-ratings)
+Announcements from HR
+4.7 Reports & Exports
+Report Name
+Data Included
+Frequency
+Format
+Access
+Monthly Attendance Report
+Daily attendance per employee
+Monthly
+Excel + PDF
+HR + Manager
+Task Completion Report
+Tasks assigned vs completed
+Weekly / Monthly
+Excel + PDF
+HR + Manager
+Performance Summary
+Avg ratings, grade distribution
+Monthly
+Excel + PDF
+HR only
+Leave Report
+Leave taken vs balance per employee
+Monthly
+Excel + PDF
+HR + Employee (own)
+Late Arrival Report
+Check-ins after threshold per employee
+Monthly
+Excel
+HR + Manager
+Custom Date Range Export
+Any of the above filtered by date
+On demand
+Excel + PDF
+HR Admin
+All Excel exports open in MS 365 Excel Online via SharePoint link, or download as .xlsx
+PDF exports use server-side rendering (headless Chrome / Puppeteer) with company branding
+Scheduled reports auto-emailed on configurable cadence
+4.8 Employee Management (HR Admin)
+Add new employee: name, email, department, designation, manager, joining date, leave entitlements
+Edit employee details
+Deactivate employee (soft delete - data retained, login disabled)
+Bulk import employees via Excel template upload
+Assign / reassign manager
+View full employment history: attendance, tasks, leave, ratings over tenure
+4.9 System Configuration (HR Admin / Super Admin)
+Work hours configuration: start time, end time, late threshold, minimum hours per day
+Leave policy: types, annual entitlement per type, carry-forward rules
+Holiday calendar: upload public holidays, company holidays
+Notification settings: which events trigger email/in-app alerts
+Performance rating labels: customise 1-5 star descriptions
+Department and designation master lists
+5. User Stories
+5.1 Employee Stories
+As an Employee, I want to check in with one click so that my attendance is recorded without filling a form.
+As an Employee, I want to see my assigned tasks for today so that I know what to work on.
+As an Employee, I want to mark a task as completed and add a note so that my manager knows my progress.
+As an Employee, I want to apply for leave and track its approval status so that I can plan my schedule.
+As an Employee, I want to see my monthly attendance and performance trend so that I can improve.
+5.2 Manager Stories
+As a Manager, I want to assign tasks to my team daily so that everyone has clear deliverables.
+As a Manager, I want to see a live view of my team's check-in status at 9 AM so that I know who is present.
+As a Manager, I want to approve or reject leave requests with a comment so that the employee is informed.
+As a Manager, I want to add a comment on an employee's daily log so that I can give real-time feedback.
+As a Manager, I want a weekly report of my team's task completion rates so that I can identify productivity gaps.
+5.3 HR Admin Stories
+As HR Admin, I want to see a real-time dashboard of all employees' attendance today so that I can act on absences immediately.
+As HR Admin, I want to export a monthly attendance report as Excel so that I can process payroll.
+As HR Admin, I want to onboard a new employee in under 5 minutes so that they can start using the system on day one.
+As HR Admin, I want to configure the leave policy and holidays once per year so that the system runs automatically.
+As HR Admin, I want to see who the top and bottom performers are by rating so that I can plan appraisals.
+6. Screens & UX Specification
+6.1 Screen Inventory
+Screen
+Role Access
+Key Components
+Login / SSO landing
+All
+Microsoft Sign-in button, company logo, tagline
+Employee Home (My Day)
+Employee
+Check-in/out, task list, leave balance, notifications
+My Tasks
+Employee
+Today's tasks, checklist, add self-task, history
+Leave Request
+Employee + Manager
+Form, leave balance, calendar, request history
+My Profile
+All
+Photo, contact info, stats, employment details
+Manager Home
+Manager
+Team attendance cards, pending leaves, task board
+Task Assignment
+Manager
+Employee selector, task form, broadcast option
+Leave Approvals
+Manager + HR
+Pending list, approve/reject, team calendar
+Team Performance
+Manager + HR
+Rating charts, individual employee drilldown
+HR Dashboard
+HR Admin
+KPI cards, heatmap, charts, alerts
+Reports
+HR + Manager
+Report selector, date range, preview, export
+Employee Management
+HR Admin
+Employee list, add/edit/deactivate, bulk import
+System Settings
+HR + Super Admin
+Work hours, leave policy, holidays, notifications
+Notifications Centre
+All
+Full list, filters, mark read, settings
+6.2 Design Principles
+Mobile-responsive: all screens functional on 375px+ viewport
+Accessibility: WCAG 2.1 AA compliance - keyboard navigable, screen-reader labels, minimum 4.5:1 contrast
+Loading states: skeleton screens for all data-fetching components
+Empty states: illustrated empty states with action prompts (not blank screens)
+Error states: user-friendly error messages with recovery actions
+Design system: Microsoft Fluent UI component library for MS 365 consistency
+7. Technical Architecture
+7.1 Tech Stack
+Layer
+Technology
+Rationale
+Frontend
+React 18 + TypeScript
+Component-based, strong MS 365 ecosystem, Fluent UI support
+UI Library
+Microsoft Fluent UI v9
+Native MS 365 look and feel, accessibility built-in
+State Management
+Zustand + React Query
+Lightweight global state + server-state caching
+Backend
+Node.js + Express (TypeScript)
+Familiar ecosystem, fast API development
+Database
+PostgreSQL 15 (Azure DB)
+Relational data model suits HR workflows, ACID compliance
+ORM
+Prisma
+Type-safe queries, schema migration management
+Authentication
+Azure AD + MSAL.js
+MS SSO, existing employee directory, MFA support
+File Storage
+Azure Blob Storage
+Profile photos, report PDFs, bulk import files
+Email
+Microsoft Graph API
+Send via company Outlook, no third-party email service
+Hosting - Frontend
+Azure Static Web Apps
+Global CDN, preview deployments, free tier available
+Hosting - Backend
+Azure App Service (B2)
+Auto-scaling, easy CI/CD from GitHub
+PDF Generation
+Puppeteer (headless Chrome)
+Pixel-perfect report PDFs with branding
+Excel Generation
+ExcelJS
+Programmatic .xlsx creation with formatting
+CI/CD
+GitHub Actions
+Automated test, build, deploy pipeline
+7.2 Data Models
+Core Entities
+User: id, name, email, role, department, designation, managerId, joinDate, isActive, leaveBalances, azureAdId
+AttendanceLog: id, userId, date, checkIn, checkOut, status, totalHours, lateFlag, morningNote, endOfDayNote, selfRating
+Task: id, title, description, assignedTo, assignedBy, dueDate, priority, status, completionNote, isManagerAssigned, createdAt
+LeaveRequest: id, userId, leaveType, startDate, endDate, reason, status, approverId, approverComment, createdAt, resolvedAt
+Notification: id, userId, type, title, body, isRead, relatedEntityType, relatedEntityId, createdAt
+LeaveBalance: id, userId, leaveType, entitled, taken, pending, remaining, year
+SystemConfig: id, key, value, updatedBy, updatedAt
+7.3 API Design
+REST API Endpoints (summary)
+POST /auth/login - Exchange AAD token for app JWT
+GET/PUT /users/:id - Get or update user profile
+POST /attendance/checkin - Record check-in with status and note
+PUT /attendance/checkout/:id - Record check-out with rating and summary
+GET /attendance - Query attendance logs (filterable by user, date range, status)
+GET/POST /tasks - Get task list or create new task
+PUT /tasks/:id - Update task status or details
+GET/POST /leave - Get leave requests or submit new request
+PUT /leave/:id/approve - Approve or reject leave with comment
+GET /dashboard/hr - Aggregated HR dashboard data
+GET /dashboard/manager - Manager team summary data
+GET /reports/:type - Generate report with filters
+POST /reports/:type/export - Download Excel or PDF
+GET/POST/PUT/DELETE /employees - Employee management CRUD
+GET/PUT /settings - System configuration read/write
+7.4 Security
+All API endpoints protected by JWT bearer token validation
+Role-based access control (RBAC) enforced server-side on every endpoint
+HTTPS enforced - HTTP redirected to HTTPS
+Azure AD MFA support for all users
+Data encrypted at rest (Azure DB encryption) and in transit (TLS 1.3)
+Input validation and sanitisation on all user inputs
+Rate limiting: 100 requests/minute per user
+Audit log: all data-modifying actions logged with user, timestamp, before/after state
+GDPR-ready: data export and deletion endpoints available
+8. Non-Functional Requirements
+Category
+Requirement
+Target
+Performance
+Page load time (first contentful paint)
+< 2 seconds on 4G
+Performance
+API response time (P95)
+< 500ms
+Availability
+System uptime
+99.5% monthly (< 3.6 hrs downtime)
+Scalability
+Concurrent users
+20 users V1, architecture supports 200+
+Security
+Authentication
+Azure AD SSO + MFA
+Accessibility
+WCAG compliance
+Level AA (2.1)
+Browser support
+Minimum browser versions
+Chrome 90+, Edge 90+, Firefox 90+, Safari 14+
+Data retention
+Attendance and task records
+3 years minimum
+Backup
+Database backup frequency
+Daily automated backup, 30-day retention
+Recovery
+RTO / RPO
+RTO < 4 hours, RPO < 24 hours
+9. Microsoft 365 Integrations
+9.1 Azure Active Directory (AAD)
+Single Sign-On via Microsoft Identity Platform (OAuth 2.0 / OpenID Connect)
+User profile sync: display name, email, department, job title, manager from AAD
+Group membership used to derive initial role assignment
+MFA enforcement inherits from tenant AAD policy
+9.2 Microsoft Graph API
+Send email notifications via user's Outlook account
+Read user calendar to surface conflicts in leave calendar (optional, V1.5)
+Post to Teams channel for notifications (optional, V1.5)
+9.3 OneDrive / SharePoint
+Generated reports saved to a designated SharePoint document library
+Direct 'Open in Excel Online' link in report downloads
+HR bulk import template hosted on SharePoint for easy access
+10. Delivery Plan
+10.1 Phases
+Phase
+Duration
+Deliverables
+Key Milestones
+Phase 0
+1 week
+Project setup, Azure infrastructure, CI/CD pipeline, DB schema, design system
+Dev environment live
+Phase 1
+3 weeks
+Auth (SSO), Employee home, Check-in/out, Daily task log, Basic notifications
+Employee MVP working
+Phase 2
+3 weeks
+Task assignment (Manager), Leave request + approval workflow, Leave calendar
+Manager workflows live
+Phase 3
+2 weeks
+HR Admin dashboard, Performance charts, Employee management, System config
+HR dashboard complete
+Phase 4
+2 weeks
+Reports & Excel/PDF exports, Email notifications, Scheduled reports
+Reporting complete
+Phase 5
+1 week
+UAT, bug fixes, performance tuning, security review, documentation
+Production launch
+Total estimated timeline: 12 weeks from project kick-off to production launch.
+10.2 Definition of Done
+Feature passes unit tests (≥ 80% code coverage)
+Feature passes QA test cases defined in test plan
+Responsive on mobile (375px) and desktop (1280px)
+Reviewed and approved by product owner
+No P0/P1 bugs open
+API documented in Swagger / OpenAPI spec
+11. Risks & Mitigations
+Risk
+Likelihood
+Impact
+Mitigation
+AAD integration issues delaying login
+Medium
+High
+Early spike in Phase 0; fallback to email/password for dev only
+Scope creep from stakeholders
+High
+Medium
+Strict change control process; anything new goes to V1.5 backlog
+Low employee adoption
+Medium
+High
+Onboarding walkthrough on first login; manager reminders; keep UX simple
+Azure cost overrun
+Low
+Medium
+Cost alerts configured; right-size app service; review monthly
+Data loss / breach
+Low
+Critical
+Encryption, RBAC, audit logs, daily backups, penetration test before launch
+12. Success Metrics
+12.1 Adoption KPIs (Target: 90 days post-launch)
+Daily active users: ≥ 90% of active employees check in via the app within 30 days
+Task submission rate: ≥ 80% of employees log at least 1 task per working day
+Leave request adoption: 100% of leave requests submitted via the system within 60 days
+Report usage: HR generates at least 1 report per week
+12.2 Quality KPIs
+System uptime: ≥ 99.5%
+User satisfaction score (NPS survey at 30 days): ≥ 40
+Support tickets per week: < 5 after first month
+13. Glossary
+Term
+Definition
+AAD
+Azure Active Directory - Microsoft's cloud identity service
+SSO
+Single Sign-On - log in once to access all connected systems
+MSAL
+Microsoft Authentication Library - SDK for AAD authentication in web apps
+RBAC
+Role-Based Access Control - permissions determined by user role
+ORM
+Object-Relational Mapper - maps database tables to code objects (Prisma)
+DXA
+Device-independent eXtra-fine units - measurement unit used in DOCX specification
+IST
+Indian Standard Time (UTC +5:30) - default timezone for all timestamps
+UAT
+User Acceptance Testing - final testing performed by end users before launch
+RTO
+Recovery Time Objective - max acceptable time to restore service after outage
+RPO
+Recovery Point Objective - max acceptable data loss measured in time
+This PRD is version 1.0. All changes must go through the product owner and be logged in the version history. Antigravity - Confidential.

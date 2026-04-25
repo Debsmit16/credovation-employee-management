@@ -1,0 +1,263 @@
+// Workforce Daily Tracker — Prisma Schema
+// Database: PostgreSQL (Neon DB)
+// Entities: User, AttendanceLog, Task, LeaveRequest, Notification, LeaveBalance, SystemConfig
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ─── Enums ───────────────────────────────────────────────────────────
+
+enum Role {
+  EMPLOYEE
+  MANAGER
+  HR_ADMIN
+  SUPER_ADMIN
+}
+
+enum AttendanceStatus {
+  PRESENT
+  WFH
+  ON_SITE_CLIENT
+}
+
+enum TaskPriority {
+  HIGH
+  MEDIUM
+  LOW
+}
+
+enum TaskStatus {
+  NOT_STARTED
+  IN_PROGRESS
+  COMPLETED
+  BLOCKED
+}
+
+enum LeaveType {
+  FULL_DAY
+  HALF_DAY
+  SICK_LEAVE
+  EMERGENCY_LEAVE
+}
+
+enum LeaveRequestStatus {
+  PENDING
+  APPROVED
+  REJECTED
+  CANCELLED
+  MODIFICATION_REQUESTED
+}
+
+enum NotificationType {
+  CHECK_IN_REMINDER
+  TASK_ASSIGNED
+  TASK_OVERDUE
+  LEAVE_APPROVED
+  LEAVE_REJECTED
+  LEAVE_REQUEST
+  MANAGER_COMMENT
+  SYSTEM_ALERT
+}
+
+// ─── Models ──────────────────────────────────────────────────────────
+
+model User {
+  id          String   @id @default(cuid())
+  email       String   @unique
+  password    String
+  name        String
+  role        Role     @default(EMPLOYEE)
+  department  String?
+  designation String?
+  phone       String?
+  emergencyContact String?
+  workLocation     String?
+  profilePhoto     String?
+  managerId   String?
+  manager     User?    @relation("ManagerReports", fields: [managerId], references: [id])
+  reports     User[]   @relation("ManagerReports")
+  joinDate    DateTime @default(now())
+  isActive    Boolean  @default(true)
+
+  // Relations
+  attendanceLogs    AttendanceLog[]
+  tasksAssigned     Task[]          @relation("TaskAssignee")
+  tasksCreated      Task[]          @relation("TaskCreator")
+  leaveRequests     LeaveRequest[]  @relation("LeaveRequester")
+  leaveApprovals    LeaveRequest[]  @relation("LeaveApprover")
+  notifications     Notification[]
+  leaveBalances     LeaveBalance[]
+  announcements     Announcement[]  @relation("AnnouncementCreator")
+
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@map("users")
+}
+
+model AttendanceLog {
+  id          String           @id @default(cuid())
+  userId      String
+  user        User             @relation(fields: [userId], references: [id])
+  date        DateTime         @db.Date
+  checkIn     DateTime?
+  checkOut    DateTime?
+  status      AttendanceStatus @default(PRESENT)
+  totalHours  Float?
+  lateFlag    Boolean          @default(false)
+  morningNote String?
+  endOfDayNote String?
+  selfRating     Int?             // 1-5 stars
+  managerRating  Int?             // 1-5 manager rating
+  managerComment String?
+  isComplete     Boolean          @default(false)
+
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@unique([userId, date])
+  @@index([userId])
+  @@index([date])
+  @@map("attendance_logs")
+}
+
+model Task {
+  id              String       @id @default(cuid())
+  title           String
+  description     String?
+  assignedToId    String
+  assignedTo      User         @relation("TaskAssignee", fields: [assignedToId], references: [id])
+  assignedById    String
+  assignedBy      User         @relation("TaskCreator", fields: [assignedById], references: [id])
+  dueDate         DateTime
+  dueTime         String?      // e.g., "17:00"
+  priority        TaskPriority @default(MEDIUM)
+  status          TaskStatus   @default(NOT_STARTED)
+  completionNote  String?
+  isManagerAssigned Boolean    @default(true)
+
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@index([assignedToId])
+  @@index([assignedById])
+  @@index([dueDate])
+  @@index([status])
+  @@map("tasks")
+}
+
+model LeaveRequest {
+  id              String             @id @default(cuid())
+  userId          String
+  user            User               @relation("LeaveRequester", fields: [userId], references: [id])
+  leaveType       LeaveType
+  startDate       DateTime           @db.Date
+  endDate         DateTime           @db.Date
+  reason          String?
+  status          LeaveRequestStatus @default(PENDING)
+  approverId      String?
+  approver        User?              @relation("LeaveApprover", fields: [approverId], references: [id])
+  approverComment String?
+
+  createdAt       DateTime @default(now())
+  resolvedAt      DateTime?
+  updatedAt       DateTime @updatedAt
+
+  @@index([userId])
+  @@index([status])
+  @@index([approverId])
+  @@map("leave_requests")
+}
+
+model Notification {
+  id                String           @id @default(cuid())
+  userId            String
+  user              User             @relation(fields: [userId], references: [id])
+  type              NotificationType
+  title             String
+  body              String
+  isRead            Boolean          @default(false)
+  relatedEntityType String?          // e.g., "task", "leave", "attendance"
+  relatedEntityId   String?
+
+  createdAt         DateTime @default(now())
+
+  @@index([userId])
+  @@index([isRead])
+  @@map("notifications")
+}
+
+model LeaveBalance {
+  id        String    @id @default(cuid())
+  userId    String
+  user      User      @relation(fields: [userId], references: [id])
+  leaveType LeaveType
+  entitled  Int       @default(0)
+  taken     Int       @default(0)
+  pending   Int       @default(0)
+  remaining Int       @default(0)
+  year      Int
+
+  @@unique([userId, leaveType, year])
+  @@index([userId])
+  @@map("leave_balances")
+}
+
+model SystemConfig {
+  id        String   @id @default(cuid())
+  key       String   @unique
+  value     String
+  updatedBy String?
+  
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("system_configs")
+}
+
+model Holiday {
+  id        String   @id @default(cuid())
+  name      String
+  date      DateTime @db.Date
+  type      String   @default("PUBLIC") // PUBLIC, COMPANY, OPTIONAL
+  
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([date])
+  @@map("holidays")
+}
+
+model Announcement {
+  id        String   @id @default(cuid())
+  title     String
+  body      String
+  priority  String   @default("NORMAL") // URGENT, NORMAL, LOW
+  createdById String
+  createdBy User     @relation("AnnouncementCreator", fields: [createdById], references: [id])
+  isActive  Boolean  @default(true)
+  expiresAt DateTime?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("announcements")
+}
+
+model DepartmentMaster {
+  id   String @id @default(cuid())
+  name String @unique
+  @@map("department_master")
+}
+
+model DesignationMaster {
+  id   String @id @default(cuid())
+  name String @unique
+  @@map("designation_master")
+}
