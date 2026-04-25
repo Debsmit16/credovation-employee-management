@@ -1,15 +1,10 @@
 {
   "version": 2,
-  "installCommand": "npm install --include=dev && npm install --prefix server && cd server && npx prisma generate --schema=src/prisma/schema.prisma && cd .. && cd client && npm install --include=dev && cd ..",
-  "buildCommand": "cd client && node_modules/.bin/vite build",
+  "buildCommand": "cd client && npm install --include=dev && node_modules/.bin/vite build",
   "outputDirectory": "client/dist",
-  "rewrites": [
-    { "source": "/api/(.*)", "destination": "/api" }
-  ],
-  "functions": {
-    "api/index.ts": {
-      "maxDuration": 30,
-      "includeFiles": "server/**"
-    }
-  }
+  "installCommand": "echo 'skip'",
+  "routes": [
+    { "handle": "filesystem" },
+    { "src": "/(.*)", "dest": "/index.html" }
+  ]
 }
