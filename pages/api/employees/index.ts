@@ -34,8 +34,10 @@ export default apiHandler({
     if (existing) return res.status(409).json({ error: 'Email already exists' });
 
     const hashedPassword = await bcrypt.hash(password || 'Welcome@123', 12);
+    const cleanManagerId = managerId === "" ? null : managerId;
+    
     const employee = await prisma.user.create({
-      data: { name, email, password: hashedPassword, role: role || 'EMPLOYEE', department, designation, managerId, joinDate: joinDate ? new Date(joinDate) : new Date() },
+      data: { name, email, password: hashedPassword, role: role || 'EMPLOYEE', department, designation, managerId: cleanManagerId, joinDate: joinDate ? new Date(joinDate) : new Date() },
       select: { id: true, name: true, email: true, role: true, department: true, designation: true, joinDate: true },
     });
 

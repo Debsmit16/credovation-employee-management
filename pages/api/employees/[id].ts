@@ -25,9 +25,11 @@ export default apiHandler({
     if (!['HR_ADMIN', 'SUPER_ADMIN'].includes(req.user!.role)) return res.status(403).json({ error: 'Insufficient permissions' });
     const { id } = req.query;
     const { name, role, department, designation, managerId, isActive } = req.body;
+    const cleanManagerId = managerId === "" ? null : managerId;
+    
     const employee = await prisma.user.update({
       where: { id: id as string },
-      data: { ...(name && { name }), ...(role && { role }), ...(department !== undefined && { department }), ...(designation !== undefined && { designation }), ...(managerId !== undefined && { managerId }), ...(isActive !== undefined && { isActive }) },
+      data: { ...(name && { name }), ...(role && { role }), ...(department !== undefined && { department }), ...(designation !== undefined && { designation }), ...(managerId !== undefined && { managerId: cleanManagerId }), ...(isActive !== undefined && { isActive }) },
       select: { id: true, name: true, email: true, role: true, department: true, designation: true, managerId: true, isActive: true, joinDate: true },
     });
     res.json(employee);
