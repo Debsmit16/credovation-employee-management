@@ -1,21 +1,40 @@
 {
+  "name": "credovation-next",
+  "version": "0.1.0",
   "private": true,
-  "name": "credovation-employee-management",
-  "version": "1.0.0",
-  "description": "Credovation Employee Management System",
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start"
+  },
+  "dependencies": {
+    "@fluentui/react-components": "^9.73.8",
+    "@prisma/client": "^5.22.0",
+    "@tanstack/react-query": "^5.100.5",
+    "axios": "^1.15.2",
+    "bcryptjs": "^3.0.3",
+    "cors": "^2.8.6",
+    "date-fns": "^4.1.0",
+    "exceljs": "^4.4.0",
+    "express-validator": "^7.3.2",
+    "jsonwebtoken": "^9.0.3",
+    "lucide-react": "^1.11.0",
+    "next": "16.2.4",
+    "pdfkit": "^0.18.0",
+    "react": "19.2.4",
+    "react-dom": "19.2.4",
+    "react-router-dom": "^7.14.2",
+    "recharts": "^3.8.1",
+    "zustand": "^5.0.12"
+  },
   "devDependencies": {
-    "@types/express": "^5.0.0",
-    "@types/cors": "^2.8.17",
     "@types/bcryptjs": "^2.4.6",
-    "@types/jsonwebtoken": "^9.0.7",
-    "@types/node": "^22.0.0",
-    "typescript": "^5.6.0",
-    "express": "^4.21.0",
-    "cors": "^2.8.5",
-    "bcryptjs": "^2.4.3",
-    "jsonwebtoken": "^9.0.2",
-    "@prisma/client": "^6.6.0",
-    "express-rate-limit": "^7.4.0",
-    "express-validator": "^7.2.0"
+    "@types/jsonwebtoken": "^9.0.10",
+    "@types/node": "^20",
+    "@types/pdfkit": "^0.17.6",
+    "@types/react": "^19",
+    "@types/react-dom": "^19",
+    "prisma": "^5.22.0",
+    "typescript": "^5"
   }
 }
