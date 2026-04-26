@@ -1,4 +1,4 @@
-﻿WORKFORCE DAILY TRACKER
+WORKFORCE DAILY TRACKER
 Product Requirements Document (PRD)
 Version 1.0  |  April 2026  |  Confidential
 Prepared for: Antigravity
@@ -16,7 +16,7 @@ Web application (responsive, browser-based - Chrome, Edge, Firefox, Safari)
 Microsoft 365 integration (SSO via Azure AD, OneDrive/SharePoint for exports)
 Three user roles: Employee, Manager, HR Admin
 Up to 20 concurrent users (scalable to 100+ in future versions)
-Initial deployment target: Azure Static Web Apps + Azure Functions backend
+Initial deployment target: Vercel (full-stack Next.js deployment)
 2.3 Out of Scope (V1)
 Native mobile app (iOS/Android)
 Payroll integration
@@ -317,48 +317,39 @@ Design system: Microsoft Fluent UI component library for MS 365 consistency
 Layer
 Technology
 Rationale
-Frontend
-React 18 + TypeScript
-Component-based, strong MS 365 ecosystem, Fluent UI support
+Framework
+Next.js 15 (Pages Router) + TypeScript
+Full-stack React framework, API routes as serverless functions, single deployment
 UI Library
 Microsoft Fluent UI v9
 Native MS 365 look and feel, accessibility built-in
 State Management
 Zustand + React Query
 Lightweight global state + server-state caching
-Backend
-Node.js + Express (TypeScript)
-Familiar ecosystem, fast API development
+Backend (API Routes)
+Next.js API Routes (Serverless Functions)
+Same-origin API, no CORS, individually bundled functions
 Database
-PostgreSQL 15 (Azure DB)
-Relational data model suits HR workflows, ACID compliance
+PostgreSQL 15 (Neon DB - Serverless)
+Relational data model suits HR workflows, ACID compliance, serverless-optimized
 ORM
 Prisma
 Type-safe queries, schema migration management
 Authentication
-Azure AD + MSAL.js
-MS SSO, existing employee directory, MFA support
-File Storage
-Azure Blob Storage
-Profile photos, report PDFs, bulk import files
-Email
-Microsoft Graph API
-Send via company Outlook, no third-party email service
-Hosting - Frontend
-Azure Static Web Apps
-Global CDN, preview deployments, free tier available
-Hosting - Backend
-Azure App Service (B2)
-Auto-scaling, easy CI/CD from GitHub
+JWT (JSON Web Tokens)
+Stateless auth, works with serverless, role-based access control
+Hosting
+Vercel
+Global CDN, preview deployments, serverless functions, single deployment
 PDF Generation
-Puppeteer (headless Chrome)
-Pixel-perfect report PDFs with branding
+PDFKit
+Server-side PDF generation with company branding
 Excel Generation
 ExcelJS
 Programmatic .xlsx creation with formatting
 CI/CD
-GitHub Actions
-Automated test, build, deploy pipeline
+Vercel Git Integration
+Automated build and deploy on git push
 7.2 Data Models
 Core Entities
 User: id, name, email, role, department, designation, managerId, joinDate, isActive, leaveBalances, azureAdId
